@@ -35,7 +35,7 @@ case class UIJourneySessionData(
                                  optInSessionData: Option[OptInSessionData] = None,
                                  incomeSourceReportingFrequencyData: Option[IncomeSourceReportingFrequencySourceData] = None,
                                  lastUpdated: Instant = Instant.now,
-                                 journeyIsComplete: Boolean = false
+                                 journeyIsComplete: Option[Boolean] = None,
                                ) {
 
   def encrypted: SensitiveUIJourneySessionData =
@@ -66,7 +66,7 @@ object UIJourneySessionData {
       ~ (__ \ "optInSessionData").formatNullable[OptInSessionData]
       ~ (__ \ "incomeSourceReportingFrequencyData").formatNullable[IncomeSourceReportingFrequencySourceData]
       ~ (__ \ "lastUpdated").format(MongoJavatimeFormats.instantFormat)
-      ~ (__ \ "journeyIsComplete").format[Boolean]
+      ~ (__ \ "journeyIsComplete").formatNullable[Boolean]
       )(UIJourneySessionData.apply, unlift(UIJourneySessionData.unapply)
     )
   }
@@ -82,7 +82,7 @@ case class SensitiveUIJourneySessionData(
                                           optInSessionData: Option[OptInSessionData] = None,
                                           incomeSourceReportingFrequencyData: Option[IncomeSourceReportingFrequencySourceData] = None,
                                           lastUpdated: Instant = Instant.now,
-                                          journeyIsComplete: Boolean = false
+                                          journeyIsComplete: Option[Boolean] = None,
                                         ) {
 
   def decrypted: UIJourneySessionData =
@@ -113,7 +113,7 @@ object SensitiveUIJourneySessionData {
       ~ (__ \ "optInSessionData").formatNullable[OptInSessionData]
       ~ (__ \ "incomeSourceReportingFrequencyData").formatNullable[IncomeSourceReportingFrequencySourceData]
       ~ (__ \ "lastUpdated").format(MongoJavatimeFormats.instantFormat)
-      ~ (__ \ "journeyIsComplete").format[Boolean]
+      ~ (__ \ "journeyIsComplete").formatNullable[Boolean]
       )(SensitiveUIJourneySessionData.apply, unlift(SensitiveUIJourneySessionData.unapply)
     )
 }
