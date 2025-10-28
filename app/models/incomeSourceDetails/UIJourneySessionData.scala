@@ -35,7 +35,7 @@ case class UIJourneySessionData(
                                  optInSessionData: Option[OptInSessionData] = None,
                                  incomeSourceReportingFrequencyData: Option[IncomeSourceReportingFrequencySourceData] = None,
                                  lastUpdated: Instant = Instant.now,
-                                 journeyIsComplete: Option[Boolean] = None,
+                                 journeyIsComplete: Option[Boolean] = None
                                ) {
 
   def encrypted: SensitiveUIJourneySessionData =
@@ -82,7 +82,7 @@ case class SensitiveUIJourneySessionData(
                                           optInSessionData: Option[OptInSessionData] = None,
                                           incomeSourceReportingFrequencyData: Option[IncomeSourceReportingFrequencySourceData] = None,
                                           lastUpdated: Instant = Instant.now,
-                                          journeyIsComplete: Option[Boolean] = None,
+                                          journeyIsComplete: Option[Boolean] = None
                                         ) {
 
   def decrypted: UIJourneySessionData =
