@@ -19,6 +19,7 @@
 @import views.html.components._
 @import views.html.layouts.unifiedLayout
 @import models.optin.newJourney.SignUpTaxYearQuestionViewModel
+@import models.incomeSourceDetails.TaxYear
 
 @this(
         mainTemplate: unifiedLayout,
@@ -32,12 +33,12 @@
         continueButton: ContinueButton
 )
 
-@(isAgent: Boolean, viewModel: SignUpTaxYearQuestionViewModel, form: Form[_], postAction: Call)(implicit messages: Messages, user: auth.MtdItUser[_])
+@(isAgent: Boolean, signUpTaxYear: TaxYear, signingUpForCY: Boolean, form: Form[_], postAction: Call)(implicit messages: Messages, user: auth.MtdItUser[_])
 
-@startYear = @{ viewModel.signUpTaxYear.taxYear.startYear.toString }
-@endYear = @{ viewModel.signUpTaxYear.taxYear.endYear.toString }
+@startYear = @{ signUpTaxYear.startYear.toString }
+@endYear = @{ signUpTaxYear.endYear.toString }
 @pageTitle = @{
-    if (viewModel.signingUpForCY) {
+    if (signingUpForCY) {
         messages("signUp.taxYearQuestion.title.currentYear")
     } else {
         messages("signUp.taxYearQuestion.title.nextYear", startYear, endYear)
@@ -45,7 +46,7 @@
 }
 
 @pageQuestion = @{
-    if (viewModel.signingUpForCY) {
+    if (signingUpForCY) {
         messages("signUp.taxYearQuestion.radioQuestion.currentYear")
     } else {
         messages("signUp.taxYearQuestion.radioQuestion.nextYear", startYear, endYear)
@@ -53,7 +54,7 @@
 }
 
 @hintText = @{
-    if (viewModel.signingUpForCY) {
+    if (signingUpForCY) {
         Some(Hint(content = Text(messages("signUp.taxYearQuestion.radioHint.currentYear"))))
     } else {
         None
@@ -72,7 +73,7 @@
             @govukErrorSummary(ErrorSummary().withFormErrorsAsText(form, mapping = Map("sign-up-tax-year-question" -> "yes-response")))
         }
 
-        @if(viewModel.signingUpForCY) {
+        @if(signingUpForCY) {
             @currentYearContent
         } else {
             @nextYearContent

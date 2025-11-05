@@ -21,6 +21,7 @@ import com.google.inject.Inject
 import config.{AgentItvcErrorHandler, FrontendAppConfig, ItvcErrorHandler, ShowInternalServerError}
 import connectors.itsastatus.ITSAStatusUpdateConnectorModel.ITSAStatusUpdateResponseSuccess
 import forms.optIn.SignUpTaxYearQuestionForm
+import models.incomeSourceDetails.TaxYear
 import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
@@ -50,65 +51,68 @@ class SignUpTaxYearQuestionController @Inject()(
   def show(isAgent: Boolean, taxYear: Option[String]): Action[AnyContent] = authActions.asMTDIndividualOrAgentWithClient(isAgent).async {
     implicit user =>
       withSignUpRFChecks {
-        optInService.isSignUpTaxYearValid(taxYear).flatMap {
-          case Some(viewModel) =>
-            retrieveIsJourneyComplete.flatMap { journeyIsComplete =>
-              if (!journeyIsComplete) {
-                withSessionData(isStart = false, viewModel.signUpTaxYear.taxYear, None) {
-                  Future(Ok(
-                    view(
-                      isAgent,
-                      viewModel,
-                      SignUpTaxYearQuestionForm(viewModel.signUpTaxYear.taxYear, viewModel.signingUpForCY),
-                      routes.SignUpTaxYearQuestionController.submit(isAgent, taxYear)
-                    )
-                  ))
-                }
-              } else {
-                Future.successful(Redirect(controllers.routes.SignUpOptOutCannotGoBackController.show(isAgent, isSignUpJourney = Some(true))))
-              }
+        //        optInService.isSignUpTaxYearValid(taxYear).flatMap {
+        //          case Some(viewModel) =>
+        retrieveIsJourneyComplete.flatMap { journeyIsComplete =>
+          if (!journeyIsComplete) {
+            withSessionData(isStart = false, TaxYear(2025, 2026), None) {
+              Future(Ok(
+                view(
+                  isAgent,
+                  TaxYear(2025, 2026),
+                  true,
+                  //                      viewModel,
+                  SignUpTaxYearQuestionForm(TaxYear(2025, 2026), true),
+                  routes.SignUpTaxYearQuestionController.submit(isAgent, taxYear)
+                )
+              ))
             }
-          case None =>
-            Future(Redirect(controllers.routes.ReportingFrequencyPageController.show(isAgent).url))
+          } else {
+            Future.successful(Redirect(controllers.routes.SignUpOptOutCannotGoBackController.show(isAgent, isSignUpJourney = Some(true))))
+          }
         }
+        //          case None =>
+        //            Future(Redirect(controllers.routes.ReportingFrequencyPageController.show(isAgent).url))
+        //        }
       }
   }
 
   def submit(isAgent: Boolean, taxYear: Option[String]): Action[AnyContent] = authActions.asMTDIndividualOrAgentWithClient(isAgent).async {
     implicit user =>
       withSignUpRFChecks {
-        optInService.isSignUpTaxYearValid(taxYear).flatMap {
-          case Some(viewModel) =>
-            SignUpTaxYearQuestionForm(viewModel.signUpTaxYear.taxYear, viewModel.signingUpForCY).bindFromRequest().fold(
-              formWithErrors => Future(BadRequest(
-                view(
-                  isAgent = isAgent,
-                  viewModel = viewModel,
-                  form = formWithErrors,
-                  postAction = routes.SignUpTaxYearQuestionController.submit(isAgent, taxYear)
-                )
-              )),
-              form => {
-                val formResponse = form.toFormMap(SignUpTaxYearQuestionForm.response).headOption
-                formResponse match {
-                  case Some(SignUpTaxYearQuestionForm.responseYes) =>
-                    signUpSubmissionService.triggerSignUpRequest().map {
-                      case ITSAStatusUpdateResponseSuccess(_) =>
-                        Redirect(routes.SignUpCompletedController.show(isAgent))
-                      case _ =>
-                        Redirect(controllers.optIn.oldJourney.routes.OptInErrorController.show(isAgent))
-                    }
-                  case Some(SignUpTaxYearQuestionForm.responseNo) =>
-                    Future(Redirect(controllers.routes.ReportingFrequencyPageController.show(isAgent).url))
-                  case _ =>
-                    Logger("application").error("[SignUpTaxYearQuestionController.submit] Invalid form response")
-                    Future(errorHandler(isAgent).showInternalServerError())
-                }
-              }
+        //        optInService.isSignUpTaxYearValid(taxYear).flatMap {
+        //          case Some(viewModel) =>
+        SignUpTaxYearQuestionForm(TaxYear(2025, 2026), true).bindFromRequest().fold(
+          formWithErrors => Future(BadRequest(
+            view(
+              isAgent = isAgent,
+              signUpTaxYear = TaxYear(2025, 2026),
+              signingUpForCY = true,
+              form = formWithErrors,
+              postAction = routes.SignUpTaxYearQuestionController.submit(isAgent, taxYear)
             )
-          case None =>
-            Future(Redirect(controllers.routes.ReportingFrequencyPageController.show(isAgent).url))
-        }
+          )),
+          form => {
+            val formResponse = form.toFormMap(SignUpTaxYearQuestionForm.response).headOption
+            formResponse match {
+              case Some(SignUpTaxYearQuestionForm.responseYes) =>
+                signUpSubmissionService.triggerSignUpRequest().map {
+                  case ITSAStatusUpdateResponseSuccess(_) =>
+                    Redirect(routes.SignUpCompletedController.show(isAgent))
+                  case _ =>
+                    Redirect(controllers.optIn.oldJourney.routes.OptInErrorController.show(isAgent))
+                }
+              case Some(SignUpTaxYearQuestionForm.responseNo) =>
+                Future(Redirect(controllers.routes.ReportingFrequencyPageController.show(isAgent).url))
+              case _ =>
+                Logger("application").error("[SignUpTaxYearQuestionController.submit] Invalid form response")
+                Future(errorHandler(isAgent).showInternalServerError())
+            }
+          }
+        )
+        //          case None =>
+        //            Future(Redirect(controllers.routes.ReportingFrequencyPageController.show(isAgent).url))
+        //        }
       }
   }
 }

@@ -30,7 +30,7 @@ import models.incomeSourceDetails.TaxYear
 import models.itsaStatus.ITSAStatus
 import models.itsaStatus.ITSAStatus.ITSAStatus
 import models.optin.newJourney.SignUpTaxYearQuestionViewModel
-import models.optin.{ConfirmTaxYearViewModel, MultiYearCheckYourAnswersViewModel, OptInSessionData}
+import models.optin.{ConfirmTaxYearViewModel, MultiYearCheckYourAnswersViewModel, OptInContextData, OptInSessionData}
 import play.api.Logger
 import repositories.UIJourneySessionDataRepository
 import services.optIn.core.OptInProposition._
@@ -77,12 +77,24 @@ class OptInService @Inject()(
                               hc: HeaderCarrier,
                               ec: ExecutionContext): Future[Seq[TaxYear]] = fetchOptInProposition().map(_.availableOptInYears.map(_.taxYear))
 
-  def setupSessionData()(implicit hc: HeaderCarrier): Future[Boolean] = {
-    repository.set(
-      UIJourneySessionData(hc.sessionId.get.value,
-        Opt(OptInJourney).toString,
-        optInSessionData =
-          Some(OptInSessionData(None, None, Some(false)))))
+  def setupSessionData()(implicit user: MtdItUser[_], hc: HeaderCarrier, ec: ExecutionContext): Future[Boolean] = {
+
+    val statusMapFuture: Future[Map[TaxYear, ITSAStatus]] = getITSAStatusesFrom(dateService.getCurrentTaxYear)
+
+    for {
+      itsaStatusesForTaxYears <- statusMapFuture
+      startOfJourneyData =
+        OptInContextData(
+          currentTaxYear = dateService.getCurrentTaxYear.toString,
+          currentYearITSAStatus = itsaStatusesForTaxYears(dateService.getCurrentTaxYear).toString,
+          nextYearITSAStatus = itsaStatusesForTaxYears(dateService.getCurrentTaxYear.nextYear).toString,
+        )
+      result <- repository.set(
+        UIJourneySessionData(hc.sessionId.get.value, Opt(OptInJourney).toString, optInSessionData = Some(OptInSessionData(Some(startOfJourneyData), None)))
+      )
+    } yield {
+      result
+    }
   }
 
   private def fetchExistingUIJourneySessionDataOrInit(attempt: Int = 1)(implicit user: MtdItUser[_],
