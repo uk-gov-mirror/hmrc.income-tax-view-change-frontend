@@ -50,7 +50,7 @@ class OptOutSessionDataRepositoryISpec extends ComponentSpecBase with ScalaFutur
           nextYearItsaStatus = Annual
         )
 
-      await(repository.initialiseOptOutJourney(optOutProposition))
+      await(repository.reloadOptOutJourney(optOutProposition))
 
       repository.recallOptOutPropositionWithIntent().futureValue.get shouldBe (optOutProposition, None)
     }
@@ -67,7 +67,7 @@ class OptOutSessionDataRepositoryISpec extends ComponentSpecBase with ScalaFutur
 
     s"save and recall the user choice" in {
 
-      await(repository.initialiseOptOutJourney(someOptOutProposition))
+      await(repository.reloadOptOutJourney(someOptOutProposition))
 
       await(repository.saveIntent(taxYear2024_2025))
 

@@ -72,7 +72,7 @@ class OptOutSessionDataRepositorySpec extends UnitSpec
   val apiError: String = "some api error"
 
   ".initialiseOptOutJourney()" should {
-
+//TODO if we can replace all instances of initialiseOptOutJourney with reloadOptOutJourney we can remove this method and test
     "write the opt out data and no customer intent to the journey repository" in {
 
       val forYearEnd = 2024
